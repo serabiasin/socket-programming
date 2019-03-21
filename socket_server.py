@@ -1,6 +1,6 @@
 import socket
 import sys
-import zipfile
+from zipfile import ZipFile
 import io
 """script untuk server-side"""
 
@@ -29,8 +29,10 @@ class socket_backend(object):
         # self.__sizeFile = int(data)
         pass
 
-    """""begin socket communication,the role play of this method is listen to incoming file"""""
 
+    def UnzipDataset(self):
+        pass
+    """""begin socket communication,the role play of this method is listen to incoming file"""""
     def beginSocketComm(self):
         port = self.__port
         # initialize instace of socket server
@@ -70,16 +72,18 @@ class socket_backend(object):
                     self.__koneksiClient.send(command.encode())
 
                     berkas = koneksi_client.recv(self.__sizeFile)
-                    path_raw='dataset.zip'
-                    with open(path_raw, 'wb') as file:
+                    self.__path_raw='dataset.zip'
+                    with open(self.__path_raw, 'wb') as file:
                         while berkas:
                             berkas = koneksi_client.recv(self.__sizeFile)
                             if not berkas:
                                 break
                             file.write(berkas)
-                    testZip=zipfile.ZipFile(path_raw)
+
                     #LAH INI LIST FILE NYA MUNCUL!? KOK CORRUPT?!
-                    testZip.printdir()
+                    # self.__zipFile=zipfile.ZipFile(self.__path_raw)
+                    # self.__zipFile.printdir()
+                    # self.__zipFile.extractall()
 
                     print("file diterima")
                     self.__koneksiClient.send(str('Received').encode())
