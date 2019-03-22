@@ -1,6 +1,7 @@
 import socket
 import sys
 from zipfile import ZipFile
+import zipfile
 import io
 """script untuk server-side"""
 
@@ -29,10 +30,18 @@ class socket_backend(object):
         # self.__sizeFile = int(data)
         pass
 
-
     def UnzipDataset(self):
-        pass
+        source_filename = '/home/ahmadalfi/Training/python/socket-programming/server/dataset.zip'
+        dest = '/home/ahmadalfi/Training/python/socket-programming/server/'
+        if zipfile.is_zipfile(source_filename):
+            print('Extracting..')
+            with ZipFile(source_filename) as zf:
+                zf.extractall(dest)
+                # zf.read()
+                zf.close()
+
     """""begin socket communication,the role play of this method is listen to incoming file"""""
+
     def beginSocketComm(self):
         port = self.__port
         # initialize instace of socket server
@@ -70,23 +79,26 @@ class socket_backend(object):
                     self.__sizeFile = int(
                         self.__koneksiClient.recv(1024).decode())
                     self.__koneksiClient.send(command.encode())
+                    print("Menerima data")
+                    self.__path_raw = '/home/ahmadalfi/Training/python/socket-programming/server/dataset.zip'
 
-                    berkas = koneksi_client.recv(self.__sizeFile)
-                    self.__path_raw='dataset.zip'
+                    # berkas = koneksi_client.recv(self.__sizeFile)
+
                     with open(self.__path_raw, 'wb') as file:
-                        while berkas:
+                        while True:
                             berkas = koneksi_client.recv(self.__sizeFile)
                             if not berkas:
+                                print("Selesai")
                                 break
                             file.write(berkas)
+                        file.seek(0)
+                        file.close()
 
-                    #LAH INI LIST FILE NYA MUNCUL!? KOK CORRUPT?!
-                    # self.__zipFile=zipfile.ZipFile(self.__path_raw)
-                    # self.__zipFile.printdir()
-                    # self.__zipFile.extractall()
+                    koneksi_client.shutdown(socket.SHUT_RD)
+                    # LAH INI LIST FILE NYA MUNCUL!? KOK CORRUPT?!
+                    self.UnzipDataset()
 
                     print("file diterima")
-                    self.__koneksiClient.send(str('Received').encode())
                     koneksi_client.close()
 
             elif command == "inference":
@@ -94,8 +106,6 @@ class socket_backend(object):
             if not command:
                 print("This is not Data!!!")
                 break
-
-        koneksi.close()
 
 
 ojek = socket_backend(7000)
