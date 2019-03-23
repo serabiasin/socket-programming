@@ -2,37 +2,27 @@ import socket
 import os
 import sys
 from zipfile import ZipFile
+import shutil
 
 class socket_raspi(object):
     """docstring forsocket_raspi as client."""
 
-    def __init__(self, port, target, direktori_dataset):
+    def __init__(self, port, target,
+                 direktori_dataset=None,
+                 direktori_wav=None):
         self.__port = port
         self.__host = target
-        self.__dir = direktori_dataset
+        self.__dirDat = direktori_dataset
+        self.__dirWav = direktori_wav
 
     def doInference(self, arg):
         pass
 
-    def get_path_for_compress(self):
-        path_zipping = []
-        for root, directories, files in os.walk(self.__dir):
-            for filename in files:
-                # join the two strings in order to form the full filepath.
-                filepath = os.path.join(root, filename)
-                path_zipping.append(filepath)
-
-        return path_zipping
-
     def compress(self):
-        dir = self.get_path_for_compress()
-        filename = "dataset.zip"
-        print('compressing...')
-        for file_name in dir:
-            with ZipFile(filename, 'w') as zip:
-                for file in dir:
-                    zip.write(file)
-        print("Done Compress")
+        # dir = self.get_path_for_compress()
+        filename = "dataset"
+        print("masuk")
+        shutil.make_archive(filename,'zip',self.__dirDat)
 
     def sendFile(self):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -45,7 +35,7 @@ class socket_raspi(object):
         except Exception as e:
             print("Koneksi error : ", e)
 
-        #do compression data
+        # do compression data
         self.compress()
         # step 1 kirim ukuran file ke server_socket
         filesize = os.path.getsize("dataset.zip")
@@ -67,7 +57,7 @@ class socket_raspi(object):
                 if buffer == 'whereisfile':
                     with open('dataset.zip', 'rb') as berkas:
                         client_socket.sendfile(berkas, 0)
-                    # step 7 DONE!!!!
+                    # step 6 DONE!!!!
                     berkas.close()
                     client_socket.shutdown(socket.SHUT_WR)
 
@@ -75,8 +65,9 @@ class socket_raspi(object):
             client_socket.close()
 
 
-# contoh penggunaan class socket_raspi
-# ojek = socket_raspi(7000, "192.168.1.3")
+
+        # contoh penggunaan class socket_raspi
+        # ojek = socket_raspi(7000, "192.168.1.3")
 dir = "/home/ahmadalfi/Training/python/speech_processing/dataset/"
-ojek = socket_raspi(7000, "127.0.0.1", dir)
+ojek = socket_raspi(7000, "127.0.0.1", direktori_dataset=dir)
 ojek.sendFile()

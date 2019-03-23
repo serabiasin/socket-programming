@@ -3,6 +3,9 @@ import sys
 from zipfile import ZipFile
 import zipfile
 import io
+import shutil
+import os
+
 """script untuk server-side"""
 
 
@@ -31,14 +34,12 @@ class socket_backend(object):
         pass
 
     def UnzipDataset(self):
-        source_filename = '/home/ahmadalfi/Training/python/socket-programming/server/dataset.zip'
+        source_path = '/home/ahmadalfi/Training/python/socket-programming/server/'
+        namafile = 'dataset.zip'
         dest = '/home/ahmadalfi/Training/python/socket-programming/server/'
-        if zipfile.is_zipfile(source_filename):
-            print('Extracting..')
-            with ZipFile(source_filename) as zf:
-                zf.extractall(dest)
-                # zf.read()
-                zf.close()
+
+        shutil.unpack_archive(os.path.join(source_path, namafile), dest)
+        os.remove(os.path.join(source_path, namafile))
 
     """""begin socket communication,the role play of this method is listen to incoming file"""""
 
@@ -82,8 +83,6 @@ class socket_backend(object):
                     print("Menerima data")
                     self.__path_raw = '/home/ahmadalfi/Training/python/socket-programming/server/dataset.zip'
 
-                    # berkas = koneksi_client.recv(self.__sizeFile)
-
                     with open(self.__path_raw, 'wb') as file:
                         while True:
                             berkas = koneksi_client.recv(self.__sizeFile)
@@ -91,14 +90,11 @@ class socket_backend(object):
                                 print("Selesai")
                                 break
                             file.write(berkas)
-                        file.seek(0)
                         file.close()
 
                     koneksi_client.shutdown(socket.SHUT_RD)
-                    # LAH INI LIST FILE NYA MUNCUL!? KOK CORRUPT?!
                     self.UnzipDataset()
-
-                    print("file diterima")
+                    print("Data Sudah terekstrak")
                     koneksi_client.close()
 
             elif command == "inference":
