@@ -1,7 +1,5 @@
 import socket
 import sys
-from zipfile import ZipFile
-import zipfile
 import io
 import shutil
 import os
@@ -28,10 +26,34 @@ class socket_backend(object):
     def sendFile(self, arg):
         pass
 
-    def recvFile(self):
-        # self.__koneksiClient.
-        # self.__sizeFile = int(data)
-        pass
+    def recvFile(self,koneksi_client):
+        buffer = 'ready'
+        self.__koneksiClient.send(buffer.encode())
+        # wait response again
+        response = self.__koneksiClient.recv(1024).decode()
+        # receive file
+        if response == "ok":
+            saya_siap = 'do_it'
+            self.__koneksiClient.send(saya_siap.encode())
+            command = 'whereisfile'
+            self.__sizeFile = int(
+                self.__koneksiClient.recv(1024).decode())
+            self.__koneksiClient.send(command.encode())
+            print("Menerima data")
+            self.__path_raw = '/home/ahmadalfi/Training/python/socket-programming/server/dataset.zip'
+
+            with open(self.__path_raw, 'wb') as file:
+                while True:
+                    berkas = koneksi_client.recv(self.__sizeFile)
+                    if not berkas:
+                        print("Selesai")
+                        break
+                    file.write(berkas)
+                file.close()
+
+            koneksi_client.shutdown(socket.SHUT_RD)
+            self.UnzipDataset()
+            print("Data Sudah terekstrak")
 
     def UnzipDataset(self):
         source_path = '/home/ahmadalfi/Training/python/socket-programming/server/'
@@ -68,40 +90,13 @@ class socket_backend(object):
             if command == "send_file":
                 print("Data masuk : " + str(command))
                 # send command back to say 'we ready'
-                buffer = 'ready'
-                self.__koneksiClient.send(buffer.encode())
-                # wait response again
-                response = self.__koneksiClient.recv(1024).decode()
-                # receive file
-                if response == "ok":
-                    saya_siap = 'do_it'
-                    self.__koneksiClient.send(saya_siap.encode())
-                    command = 'whereisfile'
-                    self.__sizeFile = int(
-                        self.__koneksiClient.recv(1024).decode())
-                    self.__koneksiClient.send(command.encode())
-                    print("Menerima data")
-                    self.__path_raw = '/home/ahmadalfi/Training/python/socket-programming/server/dataset.zip'
-
-                    with open(self.__path_raw, 'wb') as file:
-                        while True:
-                            berkas = koneksi_client.recv(self.__sizeFile)
-                            if not berkas:
-                                print("Selesai")
-                                break
-                            file.write(berkas)
-                        file.close()
-
-                    koneksi_client.shutdown(socket.SHUT_RD)
-                    self.UnzipDataset()
-                    print("Data Sudah terekstrak")
-                    koneksi_client.close()
-
+                self.recvFile(koneksi_client)
             elif command == "inference":
                 pass
             if not command:
                 print("This is not Data!!!")
                 break
+            koneksi_client.close()
 
 
 ojek = socket_backend(7000)

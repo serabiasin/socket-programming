@@ -1,7 +1,6 @@
 import socket
 import os
 import sys
-from zipfile import ZipFile
 import shutil
 
 class socket_raspi(object):
@@ -24,6 +23,12 @@ class socket_raspi(object):
         print("masuk")
         shutil.make_archive(filename,'zip',self.__dirDat)
 
+
+    """
+    TODO:
+    method ini kalau bisa flexibel, bisa buat ngirim zip,
+    atau send wav(buat inference)
+    """
     def sendFile(self):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         port = self.__port
@@ -35,6 +40,7 @@ class socket_raspi(object):
         except Exception as e:
             print("Koneksi error : ", e)
 
+        # contoh implementasi send file ( untuk train model )
         # do compression data
         self.compress()
         # step 1 kirim ukuran file ke server_socket
