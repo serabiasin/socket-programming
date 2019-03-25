@@ -10,23 +10,30 @@ import os
 class socket_backend(object):
     """docstring for socket_backend."""
 
-    def __init__(self, port):
+    def __init__(self, port, root_dir=None):
         # self.__host = '0.0.0.0'
         self.__host = '127.0.0.1'
         self.__port = port
         self.__sizeFile = 0
+        self.__root_dir = root_dir
+        self.__nameFile = os.path.join(root_dir, 'dataSuara.zip')
 
-    """This will send inference file from deep learning classification"""
+    def disconnect(self):
+        self.__koneksiClient.close()
 
     def checksumDat(self, arg):
         pass
 
     """This will send inference file from deep learning classification"""
 
+    def doInference(self, arg):
+        pass
+
     def sendFile(self, arg):
         pass
 
-    def recvFile(self,koneksi_client):
+    def recvFile(self, koneksi_client):
+        # send command back to say 'we ready'
         buffer = 'ready'
         self.__koneksiClient.send(buffer.encode())
         # wait response again
@@ -36,13 +43,15 @@ class socket_backend(object):
             saya_siap = 'do_it'
             self.__koneksiClient.send(saya_siap.encode())
             command = 'whereisfile'
+
             self.__sizeFile = int(
-                self.__koneksiClient.recv(1024).decode())
+                self.__koneksiClient.recv(1024).decode()
+            )
+
             self.__koneksiClient.send(command.encode())
             print("Menerima data")
-            self.__path_raw = '/home/ahmadalfi/Training/python/socket-programming/server/dataset.zip'
 
-            with open(self.__path_raw, 'wb') as file:
+            with open(self.__nameFile, 'wb') as file:
                 while True:
                     berkas = koneksi_client.recv(self.__sizeFile)
                     if not berkas:
@@ -51,17 +60,14 @@ class socket_backend(object):
                     file.write(berkas)
                 file.close()
 
-            koneksi_client.shutdown(socket.SHUT_RD)
+            self.__koneksiClient.shutdown(socket.SHUT_RD)
             self.UnzipDataset()
             print("Data Sudah terekstrak")
 
     def UnzipDataset(self):
-        source_path = '/home/ahmadalfi/Training/python/socket-programming/server/'
-        namafile = 'dataset.zip'
-        dest = '/home/ahmadalfi/Training/python/socket-programming/server/'
 
-        shutil.unpack_archive(os.path.join(source_path, namafile), dest)
-        os.remove(os.path.join(source_path, namafile))
+        shutil.unpack_archive(self.__nameFile, self.__root_dir)
+        os.remove(self.__nameFile)
 
     """""begin socket communication,the role play of this method is listen to incoming file"""""
 
@@ -71,7 +77,6 @@ class socket_backend(object):
         self.__server_socket = socket.socket(
             socket.AF_INET, socket.SOCK_STREAM)
         self.__server_socket.bind((self.__host, port))
-        Format_file = "dataSuara.zip"
 
         """
             jumlah client (untuk kasus Proyek Akhir,jumlah client 1 aja..
@@ -81,23 +86,27 @@ class socket_backend(object):
         print("Begin Listening...")
         while True:
 
-            koneksi_client, ipaddress = self.__server_socket.accept()
-            self.__koneksiClient = koneksi_client
+            self.__koneksiClient, identity = self.__server_socket.accept()
+
             print("Koneksi Masuk, dari : ", str(
-                ipaddress[0]), str(ipaddress[1]))
-            self.__ipClient = ipaddress
-            command = koneksi_client.recv(1024).decode()
-            if command == "send_file":
+                identity[0]), str(identity[1])
+            )
+            command = self.__koneksiClient.recv(1024).decode()
+
+            if command == "do_train":
                 print("Data masuk : " + str(command))
-                # send command back to say 'we ready'
-                self.recvFile(koneksi_client)
+                self.recvFile(self.__koneksiClient)
+                # import toolset Deep Learning Class
+
             elif command == "inference":
-                pass
+                print("Data masuk : " + str(command))
+                self.recvFile(self.__koneksiClient)
+                # import toolset Deep Learning Class
+
             if not command:
                 print("This is not Data!!!")
-                break
-            koneksi_client.close()
+                self.__koneksiClient.shutdown(socket.SHUT_RD)
 
 
-ojek = socket_backend(7000)
+ojek = socket_backend(7000,root_dir="/home/ahmadalfi/Training/python/socket-programming/server")
 ojek.beginSocketComm()
