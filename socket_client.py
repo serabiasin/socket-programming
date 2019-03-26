@@ -1,12 +1,35 @@
+"""
+
+PROGRAMMED BY           : AHMAD ALFI ADZ-DZIKRI
+DATE PRGORAMMED         : BANDUNG, MARCH 26 2019
+PURPOSE                 : CLOUD DEEP LEARNING BASED EXPERIMENT
+
+"""
+
 import socket
 import os
 import sys
 import shutil
 
 
-class socket_raspi(object):
-    """docstring forsocket_raspi as client."""
+class socketClient(object):
 
+    """
+    port
+    Server Port number
+
+    target
+    is a ip target, or the DNS target (which is server)
+
+    direktori_dataset
+    the directory of dataset
+
+    direktori_wav
+    the directory of wav file (sample voice)
+
+    root_dir
+    this variable used to be a place where incoming file stored
+    """
     def __init__(self, port, target,
                  direktori_dataset=None,
                  direktori_wav=None,
@@ -29,11 +52,23 @@ class socket_raspi(object):
         except Exception as e:
             print("Koneksi error : ", e)
 
+    """
+    disconnectClient()
+
+    this method is use to disconnect the client and close the socket
+    Connection
+    """
     def disconnectClient(self):
         self.__client_socket.shutdown(socket.SHUT_RDWR)
         self.__client_socket.close()
         print("Socket Closed")
 
+    """
+    doInference()
+
+    this will do a inference and send data wav to server and
+    do deep learning inference
+    """
     def doInference(self):
         self.__command = "inference"
         self.sendFile(self.__dirWav)
@@ -42,6 +77,11 @@ class socket_raspi(object):
         # mulai process receive
         self.recvFile()
 
+    """
+    compress()
+
+    an utility to make directory become archive
+    """
     def compress(self):
         # dir = self.get_path_for_compress()
         filename = "dataset"
@@ -49,11 +89,24 @@ class socket_raspi(object):
         namaZip = os.path.basename(self.__dirDat[:-1]) + '.zip'
         return namaZip
 
+
+    """
+    doTrain()
+
+    send instruction to do a training for deep learning
+    and send archive that compress() do to the server
+    """
     def doTrain(self):
         namaZip = self.compress()
         self.__command = "do_train"
         self.sendFile(namaZip)
 
+
+    """
+    sendFile()
+
+    this method is an utility to send file to the server
+    """
     def sendFile(self, namaFile):
 
         # step 1 kirim ukuran file ke server_socket
@@ -87,7 +140,11 @@ class socket_raspi(object):
 
             print("Selesai")
 
-# WARNING: NOT TESTED
+    """
+    recvFile()
+
+    this method is an utility to receive file from server
+    """
     def recvFile(self):
         # Pertama kita 'handshake' dulu untuk memberi informasi
         # alamat IP, dan port yang kita pakai setelah
@@ -117,16 +174,17 @@ class socket_raspi(object):
 
 # contoh penggunaan class socket_raspi
 
-# ojek = socket_raspi(7000, "192.168.1.3")
+# ojek = socketClient(7000, "192.168.1.3")
 # dir = "/home/ahmadalfi/Training/python/speech_processing/dataset/"
 # wav = "/home/ahmadalfi/Training/python/socket-programming/client/[class1]00003_0.wav"
 # root = '/home/ahmadalfi/Training/python/socket-programming/client'
 #
-# ojek = socket_raspi(7000, "127.0.0.1", direktori_dataset=dir,
+# ojek = socketClient(7000, "127.0.0.1", direktori_dataset=dir,
 #                     direktori_wav=wav, root_dir=root)
 #
 # ojek.doTrain()
 # ojek.disconnectClient()
-# ojek = socket_raspi(7000, "127.0.0.1", direktori_dataset=dir,
+# ojek = socketClient(7000, "127.0.0.1", direktori_dataset=dir,
 #                     direktori_wav=wav, root_dir=root)
 # ojek.doInference()
+# ojek.disconnectClient()
